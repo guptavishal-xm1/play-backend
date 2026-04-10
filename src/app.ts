@@ -10,7 +10,7 @@ import { requestContext } from "./middleware/requestContext.js";
 import { router } from "./routes/index.js";
 import { logger } from "./utils/logger.js";
 
-export function createApp() {
+export default function createApp() {
   const app = express();
 
   app.use(helmet());
