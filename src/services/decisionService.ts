@@ -3,6 +3,7 @@ import { fetchQuizFromOpenTrivia } from "../clients/openTriviaClient.js";
 import { HttpError } from "../middleware/errorHandler.js";
 import type { EntryDecisionResponse } from "../types/api.js";
 import { ensureAllowedRedirectUrl } from "../utils/url.js";
+import { logger } from "../utils/logger.js";
 
 type DecisionState = {
   isQuiz: boolean;
@@ -18,12 +19,15 @@ const state: DecisionState = {
 
 export async function getEntryDecision(): Promise<EntryDecisionResponse> {
   if (state.isQuiz) {
+    logger.info("decision_quiz_path", { source: state.source });
     const quiz = await fetchQuizFromOpenTrivia({
       baseUrl: env.OPEN_TRIVIA_BASE_URL,
       amount: env.OPEN_TRIVIA_AMOUNT,
       category: env.OPEN_TRIVIA_CATEGORY,
       difficulty: env.OPEN_TRIVIA_DIFFICULTY
     });
+
+    logger.info("decision_quiz_fetched", { questionCount: quiz.questions.length });
 
     return {
       success: true,
@@ -37,6 +41,7 @@ export async function getEntryDecision(): Promise<EntryDecisionResponse> {
     };
   }
 
+  logger.info("decision_redirect_path", { source: state.source, url: state.redirectUrl });
   const redirectUrl = ensureAllowedRedirectUrl(state.redirectUrl, env.REDIRECT_ALLOWED_HOSTS_LIST);
 
   return {

@@ -8,7 +8,8 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "lint": "eslint .",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "vercel-build": "npm run build"
   },
   "dependencies": {
     "cors": "^2.8.5",

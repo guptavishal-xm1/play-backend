@@ -12,6 +12,13 @@ router.get("/health", (_req, res) => {
   });
 });
 
+router.get("/api/health", (_req, res) => {
+  res.status(200).json({
+    status: "healthy",
+    timestamp: new Date().toISOString()
+  });
+});
+
 router.get("/v1/app/entry-decision", (req, res, next) => {
   entryDecisionController(req, res).catch(next);
 });

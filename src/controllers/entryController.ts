@@ -2,14 +2,20 @@ import type { Request, Response } from "express";
 import { z } from "zod";
 import { HttpError } from "../middleware/errorHandler.js";
 import { getCurrentDecisionState, getEntryDecision, updateDecision } from "../services/decisionService.js";
+import { logger } from "../utils/logger.js";
 
 const updateDecisionSchema = z.object({
   isQuiz: z.boolean(),
   redirectUrl: z.string().url().optional()
 });
 
-export async function entryDecisionController(_req: Request, res: Response): Promise<void> {
+export async function entryDecisionController(req: Request, res: Response): Promise<void> {
+  logger.info("entry_decision_request_start", { requestId: req.requestId });
   const payload = await getEntryDecision();
+  logger.info("entry_decision_request_success", { 
+    requestId: req.requestId,
+    isQuiz: payload.data.isQuiz
+  });
   res.status(200).json(payload);
 }
 

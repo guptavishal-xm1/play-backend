@@ -52,38 +52,51 @@ export async function fetchQuizFromOpenTrivia(input: {
   }
 
   const endpoint = `${input.baseUrl}/api.php?${params.toString()}`;
-  const response = await fetch(endpoint, {
-    method: "GET",
-    headers: {
-      Accept: "application/json"
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const response = await fetch(endpoint, {
+      method: "GET",
+      headers: {
+        Accept: "application/json"
+      },
+      signal: controller.signal
+    });
+
+    if (!response.ok) {
+      throw new HttpError(502, "Open Trivia API request failed");
     }
-  });
 
-  if (!response.ok) {
-    throw new HttpError(502, "Open Trivia API request failed");
-  }
+    const payload = (await response.json()) as OpenTriviaApiResponse;
 
-  const payload = (await response.json()) as OpenTriviaApiResponse;
+    if (payload.response_code !== 0 || !Array.isArray(payload.results) || payload.results.length === 0) {
+      throw new HttpError(502, "Open Trivia API returned no questions");
+    }
 
-  if (payload.response_code !== 0 || !Array.isArray(payload.results) || payload.results.length === 0) {
-    throw new HttpError(502, "Open Trivia API returned no questions");
-  }
+    const questions: QuizQuestion[] = payload.results.map((entry, index) => {
+      const question = decodeHtml(entry.question);
+      const correctAnswer = decodeHtml(entry.correct_answer);
+      const options = shuffle([correctAnswer, ...entry.incorrect_answers.map(decodeHtml)]);
 
-  const questions: QuizQuestion[] = payload.results.map((entry, index) => {
-    const question = decodeHtml(entry.question);
-    const correctAnswer = decodeHtml(entry.correct_answer);
-    const options = shuffle([correctAnswer, ...entry.incorrect_answers.map(decodeHtml)]);
+      return {
+        id: `${Date.now()}-${index + 1}`,
+        question,
+        options,
+        correctAnswer
+      };
+    });
 
     return {
-      id: `${Date.now()}-${index + 1}`,
-      question,
-      options,
-      correctAnswer
+      title: "Daily Challenge Quiz",
+      questions
     };
-  });
-
-  return {
-    title: "Daily Challenge Quiz",
-    questions
-  };
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new HttpError(504, "Open Trivia API request timeout - took longer than 10 seconds");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
