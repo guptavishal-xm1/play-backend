@@ -6,12 +6,6 @@
     "NODE_ENV": "production",
     "PORT": "8080"
   },
-  "functions": {
-    "src/server.ts": {
-      "runtime": "nodejs20.x",
-      "memory": 1024,
-      "timeout": 30
-    }
-  },
   "public": false
 }
+    "public": false
