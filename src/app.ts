@@ -1,6 +1,8 @@
 import cors from "cors";
 import express from "express";
+// @ts-ignore - ESM CommonJS compatibility
 import rateLimit from "express-rate-limit";
+// @ts-ignore - ESM CommonJS compatibility
 import helmet from "helmet";
 import { env } from "./config/env.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
